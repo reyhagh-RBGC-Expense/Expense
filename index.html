@@ -2124,18 +2124,29 @@ function buildUrl(base, params) {
   return base + '?' + qs;
 }
 
+function pingSheets(url) {
+  // script tag follows Google's auth redirects; fetch+no-cors drops at the redirect.
+  // Apps Script executes fully even though we can't read the response.
+  return new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    s.onload = () => { s.remove(); resolve({ status: 'ok' }); };
+    s.onerror = () => { s.remove(); resolve({ status: 'ok' }); };
+    document.head.appendChild(s);
+    setTimeout(() => { try { s.remove(); } catch(e){} resolve({ status: 'ok' }); }, 8000);
+  });
+}
+
 async function callSheets(params) {
   const base = STATE.settings.sheetsUrl;
   if (!base) throw new Error('No Apps Script URL configured');
   const url = buildUrl(base, params);
-  // Use no-cors for writes (fire and confirm via read), cors for reads
   const isRead = params.action === 'read';
-  const resp = await fetch(url, {
-    method: 'GET',
-    mode: isRead ? 'cors' : 'no-cors',
-  });
-  if (isRead) return resp.json();
-  return { status: 'ok' }; // no-cors = opaque, assume ok for writes
+  if (isRead) {
+    const resp = await fetch(url, { method: 'GET', mode: 'cors' });
+    return resp.json();
+  }
+  return pingSheets(url);
 }
 
 async function uploadToSheets(entry) {
@@ -2191,7 +2202,7 @@ async function deleteFromSheets(entry) {
   if (!base) return;
   try {
     const url = buildUrl(base, { action: 'delete', type: entry.type, id: entry.id });
-    await fetch(url, { method: 'GET', mode: 'no-cors' });
+    await pingSheets(url);
     toast('Removed from Google Sheets ✓', 'success');
   } catch(e) {
     console.warn('Sheets delete failed:', e);
