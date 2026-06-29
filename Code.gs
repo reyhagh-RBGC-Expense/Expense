@@ -209,7 +209,7 @@ function nextEmptyRow(sheet, startRow) {
 // ── doPost: receives receipt/invoice image and uploads to Google Drive ──────
 function doPost(e) {
   try {
-    const data     = JSON.parse(e.postData.contents);
+    const data     = JSON.parse(e.postData.contents || e.postData.getDataAsString());
     const id       = data.id       || '';
     const type     = data.type     || 'expense';
     const base64   = data.base64   || '';
