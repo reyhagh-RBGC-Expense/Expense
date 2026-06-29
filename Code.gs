@@ -197,8 +197,13 @@ function doPost(e) {
 //  HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 function nextEmptyRow(sheet, startRow) {
-  const last = sheet.getLastRow();
-  return last < startRow ? startRow : last + 1;
+  // Scan column A from startRow to find first truly empty cell
+  // This avoids appending after the TOTAL row when setup created 500 blank rows
+  const data = sheet.getRange(startRow, 1, Math.max(sheet.getLastRow() - startRow + 2, 1), 1).getValues();
+  for (let i = 0; i < data.length; i++) {
+    if (data[i][0] === '' || data[i][0] === null) return startRow + i;
+  }
+  return startRow + data.length;
 }
 
 function getOrCreateFolder(name) {
