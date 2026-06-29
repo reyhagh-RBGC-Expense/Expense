@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ledger-pro-v1';
+const CACHE_NAME = 'ledger-pro-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -25,6 +25,17 @@ self.addEventListener('fetch', e => {
   // Always network-first for Apps Script API calls
   if (url.hostname.includes('script.google.com') || url.hostname.includes('googleapis.com')) {
     e.respondWith(fetch(e.request).catch(() => new Response(JSON.stringify({ error: 'Offline' }), { headers: { 'Content-Type': 'application/json' } })));
+    return;
+  }
+  // Network-first for HTML so updates always come through
+  if (e.request.destination === 'document') {
+    e.respondWith(
+      fetch(e.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        return response;
+      }).catch(() => caches.match(e.request))
+    );
     return;
   }
   // Cache-first for everything else
