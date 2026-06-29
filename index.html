@@ -1636,7 +1636,7 @@ const STATE = {
   settings: {
     lang: 'en',
     currency: 'USD',
-    sheetsUrl: 'https://script.google.com/macros/s/AKfycbztU7_fgaWpVhnMB72Spz-A-J_7d9K17dsF0yoQvy9kxaJpB5gHkUk3j6RW98DzUR5C4w/exec',
+    sheetsUrl: 'https://script.google.com/macros/s/AKfycbxFBI6SUeaWsIVdmbcq1IpYKE7bt7x596uIXKfcoIlRFzmA0XuktH_y_vA-0Q2GcZ6b_g/exec',
     onboardingDone: false,
     licensed: false,
     trialStart: null,
@@ -1676,7 +1676,7 @@ function load() {
     if (i) STATE.income = JSON.parse(i);
     if (s) STATE.settings = { ...STATE.settings, ...JSON.parse(s) };
     // Always force the correct Apps Script URL regardless of what localStorage has
-    const CORRECT_URL = 'https://script.google.com/macros/s/AKfycbztU7_fgaWpVhnMB72Spz-A-J_7d9K17dsF0yoQvy9kxaJpB5gHkUk3j6RW98DzUR5C4w/exec';
+    const CORRECT_URL = 'https://script.google.com/macros/s/AKfycbxFBI6SUeaWsIVdmbcq1IpYKE7bt7x596uIXKfcoIlRFzmA0XuktH_y_vA-0Q2GcZ6b_g/exec';
     STATE.settings.sheetsUrl = CORRECT_URL;
   } catch(e) { console.warn('Load failed:', e); }
 }
