@@ -1675,6 +1675,9 @@ function load() {
     if (e) STATE.expenses = JSON.parse(e);
     if (i) STATE.income = JSON.parse(i);
     if (s) STATE.settings = { ...STATE.settings, ...JSON.parse(s) };
+    // Always force the correct Apps Script URL regardless of what localStorage has
+    const CORRECT_URL = 'https://script.google.com/macros/s/AKfycbztU7_fgaWpVhnMB72Spz-A-J_7d9K17dsF0yoQvy9kxaJpB5gHkUk3j6RW98DzUR5C4w/exec';
+    STATE.settings.sheetsUrl = CORRECT_URL;
   } catch(e) { console.warn('Load failed:', e); }
 }
 
