@@ -206,6 +206,43 @@ function nextEmptyRow(sheet, startRow) {
   return startRow + data.length;
 }
 
+// ── doPost: receives receipt/invoice image and uploads to Google Drive ──────
+function doPost(e) {
+  try {
+    const data     = JSON.parse(e.postData.contents);
+    const id       = data.id       || '';
+    const type     = data.type     || 'expense';
+    const base64   = data.base64   || '';
+    const fileName = data.fileName || ('receipt_' + id + '.jpg');
+    if (!base64 || !id) return ok({ url: '' });
+
+    const folderName = type === 'income' ? INVOICES_FOLDER : RECEIPTS_FOLDER;
+    const url = uploadFile(base64, fileName, folderName);
+
+    // Update the receipt/invoice link column in the sheet
+    const ss    = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(type === 'income' ? INC_SHEET : EXP_SHEET);
+    if (sheet && url) {
+      // Find the row with this ID (column 14 for expense, col 9 for income)
+      const idCol   = type === 'income' ? 9  : 14;
+      const linkCol = type === 'income' ? 8  : 13;
+      const lastRow = sheet.getLastRow();
+      if (lastRow >= 4) {
+        const ids = sheet.getRange(4, idCol, lastRow - 3, 1).getValues();
+        for (let i = 0; i < ids.length; i++) {
+          if (String(ids[i][0]) === String(id)) {
+            sheet.getRange(4 + i, linkCol).setValue(url);
+            break;
+          }
+        }
+      }
+    }
+    return ok({ url: url });
+  } catch(ex) {
+    return err(ex.message);
+  }
+}
+
 function getOrCreateFolder(name) {
   const iter = DriveApp.getFoldersByName(name);
   return iter.hasNext() ? iter.next() : DriveApp.createFolder(name);

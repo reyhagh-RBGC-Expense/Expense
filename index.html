@@ -2191,8 +2191,36 @@ async function uploadToSheets(entry) {
       };
     }
     await callSheets(params);
+
+    // Upload receipt/invoice photo to Google Drive via POST
+    const base64 = entry.receiptBase64 || entry.invoiceBase64 || null;
+    if (base64 && entry.id) {
+      try {
+        const ext = base64.includes('application/pdf') ? 'pdf' : 'jpg';
+        const fileName = (entry.type === 'income' ? 'invoice_' : 'receipt_') + entry.id + '.' + ext;
+        const resp = await fetch(base, {
+          method: 'POST',
+          body: JSON.stringify({ id: entry.id, type: entry.type, base64, fileName })
+        });
+        const result = await resp.json();
+        if (result.url) {
+          // Save the Drive link back to the local entry
+          const arr = entry.type === 'income' ? STATE.income : STATE.expenses;
+          const idx = arr.findIndex(x => x.id === entry.id);
+          if (idx !== -1) { arr[idx].receiptUrl = result.url; save(); }
+          toast('Saved to Google Sheets + Drive ✓', 'success');
+        } else {
+          toast('Saved to Google Sheets ✓', 'success');
+        }
+      } catch(re) {
+        console.warn('Receipt upload failed:', re);
+        toast('Saved to Google Sheets ✓ (receipt upload failed)', 'info');
+      }
+    } else {
+      toast('Saved to Google Sheets ✓', 'success');
+    }
+
     setSyncStatus('online');
-    toast('Saved to Google Sheets ✓', 'success');
   } catch(e) {
     setSyncStatus('offline');
     console.warn('Sheets upload failed:', e);
